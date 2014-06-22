@@ -18,6 +18,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
 
   s.add_runtime_dependency 'multi_json', ["~> 1.0"]
+  s.add_runtime_dependency 'thread', ["~> 0.1"]
 
   if RUBY_VERSION < "1.9"
     # Use ruby 1.8 compatible httparty
@@ -32,4 +33,3 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'rdoc'
   s.add_development_dependency 'pry'
 end
-
