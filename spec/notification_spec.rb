@@ -1,6 +1,4 @@
-# encoding: utf-8
 require 'spec_helper'
-require 'securerandom'
 require 'ostruct'
 
 module ActiveRecord; class RecordNotFound < RuntimeError; end; end
@@ -125,11 +123,11 @@ describe Bugsnag::Notification do
     end
 
     Bugsnag.notify(BugsnagTestException.new("It crashed"), {
-      :some_tab => {
-        :info => "here",
-        :data => "also here"
-      }
-    })
+        :some_tab => {
+          :info => "here",
+          :data => "also here"
+        }
+      })
   end
 
   it "accepts non-hash overrides and adds them to the custom tab in metaData" do
@@ -141,9 +139,9 @@ describe Bugsnag::Notification do
     end
 
     Bugsnag.notify(BugsnagTestException.new("It crashed"), {
-      :info => "here",
-      :data => "also here"
-    })
+        :info => "here",
+        :data => "also here"
+      })
   end
 
   it "accepts meta data from an exception that mixes in Bugsnag::MetaData" do
@@ -241,30 +239,13 @@ describe Bugsnag::Notification do
     end
 
     Bugsnag.notify(BugsnagTestException.new("It crashed"), {
-      :meta_data => {
-        :some_tab => {
-          :info => "here",
-          :data => "also here"
+        :meta_data => {
+          :some_tab => {
+            :info => "here",
+            :data => "also here"
+          }
         }
-      }
-    })
-  end
-
-  it "truncates large meta_data before sending" do
-    expect(Bugsnag::Notification).to receive(:post) do |endpoint, opts|
-      # Truncated body should be no bigger than
-      # 2 truncated hashes (4096*2) + rest of payload (5000)
-      expect(opts[:body].length).to be < 4096*2 + 5000
-    end
-
-    Bugsnag.notify(BugsnagTestException.new("It crashed"), {
-      :meta_data => {
-        :some_tab => {
-          :giant => SecureRandom.hex(500_000/2),
-          :mega => SecureRandom.hex(500_000/2)
-        }
-      }
-    })
+      })
   end
 
   it "accepts a severity in overrides" do
@@ -274,8 +255,8 @@ describe Bugsnag::Notification do
     end
 
     Bugsnag.notify(BugsnagTestException.new("It crashed"), {
-      :severity => "info"
-    })
+        :severity => "info"
+      })
   end
 
   it "defaults to warning severity" do
@@ -294,8 +275,8 @@ describe Bugsnag::Notification do
     end
 
     Bugsnag.notify(BugsnagTestException.new("It crashed"), {
-      :severity => "fatal"
-    })
+        :severity => "fatal"
+      })
   end
 
   it "autonotifies errors" do
@@ -315,8 +296,8 @@ describe Bugsnag::Notification do
     end
 
     Bugsnag.notify(BugsnagTestException.new("It crashed"), {
-      :context => "test_context"
-    })
+        :context => "test_context"
+      })
   end
 
   it "accepts a user_id in overrides" do
@@ -326,8 +307,8 @@ describe Bugsnag::Notification do
     end
 
     Bugsnag.notify(BugsnagTestException.new("It crashed"), {
-      :user_id => "test_user"
-    })
+        :user_id => "test_user"
+      })
   end
 
   it "does not send a notification if auto_notify is false" do
@@ -403,28 +384,6 @@ describe Bugsnag::Notification do
       expect(endpoint).to start_with "http://"
     end
 
-    Bugsnag.notify(BugsnagTestException.new("It crashed"))
-  end
-
-  it "does not mark the top-most stacktrace line as inProject if out of project" do
-    expect(Bugsnag::Notification).to receive(:deliver_exception_payload) do |endpoint, payload|
-      exception = get_exception_from_payload(payload)
-      expect(exception[:stacktrace].size).to be >= 1
-      expect(exception[:stacktrace].first[:inProject]).to be_nil
-    end
-
-    Bugsnag.configuration.project_root = "/Random/location/here"
-    Bugsnag.notify(BugsnagTestException.new("It crashed"))
-  end
-
-  it "marks the top-most stacktrace line as inProject if necessary" do
-    expect(Bugsnag::Notification).to receive(:deliver_exception_payload) do |endpoint, payload|
-      exception = get_exception_from_payload(payload)
-      expect(exception[:stacktrace].size).to be >= 1
-      expect(exception[:stacktrace].first[:inProject]).to eq(true)
-    end
-
-    Bugsnag.configuration.project_root = File.expand_path File.dirname(__FILE__)
     Bugsnag.notify(BugsnagTestException.new("It crashed"))
   end
 
@@ -574,56 +533,6 @@ describe Bugsnag::Notification do
     notify_test_exception
   end
 
-  it "supports unix-style paths in backtraces" do
-    ex = BugsnagTestException.new("It crashed")
-    ex.set_backtrace([
-      "/Users/james/app/spec/notification_spec.rb:419",
-      "/Some/path/rspec/example.rb:113:in `instance_eval'"
-    ])
-
-    expect(Bugsnag::Notification).to receive(:deliver_exception_payload) do |endpoint, payload|
-      exception = get_exception_from_payload(payload)
-      expect(exception[:stacktrace].length).to eq(2)
-
-      line = exception[:stacktrace][0]
-      expect(line[:file]).to eq("/Users/james/app/spec/notification_spec.rb")
-      expect(line[:lineNumber]).to eq(419)
-      expect(line[:method]).to be nil
-
-      line = exception[:stacktrace][1]
-      expect(line[:file]).to eq("/Some/path/rspec/example.rb")
-      expect(line[:lineNumber]).to eq(113)
-      expect(line[:method]).to eq("instance_eval")
-    end
-
-    Bugsnag.notify(ex)
-  end
-
-  it "supports windows-style paths in backtraces" do
-    ex = BugsnagTestException.new("It crashed")
-    ex.set_backtrace([
-      "C:/projects/test/app/controllers/users_controller.rb:13:in `index'",
-      "C:/ruby/1.9.1/gems/actionpack-2.3.10/filters.rb:638:in `block in run_before_filters'"
-    ])
-
-    expect(Bugsnag::Notification).to receive(:deliver_exception_payload) do |endpoint, payload|
-      exception = get_exception_from_payload(payload)
-      expect(exception[:stacktrace].length).to eq(2)
-
-      line = exception[:stacktrace][0]
-      expect(line[:file]).to eq("C:/projects/test/app/controllers/users_controller.rb")
-      expect(line[:lineNumber]).to eq(13)
-      expect(line[:method]).to eq("index")
-
-      line = exception[:stacktrace][1]
-      expect(line[:file]).to eq("C:/ruby/1.9.1/gems/actionpack-2.3.10/filters.rb")
-      expect(line[:lineNumber]).to eq(638)
-      expect(line[:method]).to eq("block in run_before_filters")
-    end
-
-    Bugsnag.notify(ex)
-  end
-
   it "uses a proxy host if configured" do
     Bugsnag.configure do |config|
       config.proxy_host = "host_name"
@@ -687,17 +596,6 @@ describe Bugsnag::Notification do
     end
 
     notify_test_exception
-  end
-
-  it "should fix invalid utf8" do
-    invalid_data = "fl\xc3ff"
-    invalid_data.force_encoding('BINARY') if invalid_data.respond_to?(:force_encoding)
-
-    expect(Bugsnag::Notification).to receive(:post) do |endpoint, opts|
-      expect(opts[:body]).to match(/fl�ff/) if defined?(Encoding::UTF_8)
-    end
-
-    notify_test_exception(:fluff => {:fluff => invalid_data})
   end
 
   if defined?(JRUBY_VERSION)

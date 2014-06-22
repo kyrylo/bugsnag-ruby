@@ -4,29 +4,17 @@ require "pathname"
 
 module Bugsnag
   class Notification
-    include HTTParty
-
     NOTIFIER_NAME = "Ruby Bugsnag Notifier"
     NOTIFIER_VERSION = Bugsnag::VERSION
     NOTIFIER_URL = "http://www.bugsnag.com"
 
     API_KEY_REGEX = /[0-9a-f]{32}/i
 
-    # e.g. "org/jruby/RubyKernel.java:1264:in `catch'"
-    BACKTRACE_LINE_REGEX = /^((?:[a-zA-Z]:)?[^:]+):(\d+)(?::in `([^']+)')?$/
-
-    # e.g. "org.jruby.Ruby.runScript(Ruby.java:807)"
-    JAVA_BACKTRACE_REGEX = /^(.*)\((.*)(?::([0-9]+))?\)$/
-
     MAX_EXCEPTIONS_TO_UNWRAP = 5
 
     SUPPORTED_SEVERITIES = ["error", "warning", "info"]
 
     CURRENT_PAYLOAD_VERSION = "2"
-
-    # HTTParty settings
-    headers  "Content-Type" => "application/json"
-    default_timeout 5
 
     attr_accessor :context
     attr_accessor :user
@@ -44,8 +32,9 @@ module Bugsnag
             payload_string = Bugsnag::Helpers.dump_json(payload)
           end
 
-          response = post(endpoint, {:body => payload_string})
-          Bugsnag.debug("Notification to #{endpoint} finished, response was #{response.code}, payload was #{payload_string}")
+          deliveryman = Notification::Deliveryman.new
+          deliveryman.deliver(:to => endpoint, :payload => payload_string)
+          Bugsnag.debug("Notification to #{endpoint} finished, response was #{deliveryman.response.code}, payload was #{payload_string}")
         rescue StandardError => e
           # KLUDGE: Since we don't re-raise http exceptions, this breaks rspec
           raise if e.class.to_s == "RSpec::Expectations::ExpectationNotMetError"
@@ -338,51 +327,8 @@ module Bugsnag
     end
 
     def stacktrace(exception)
-      (exception.backtrace || caller).map do |trace|
-
-        if trace.match(BACKTRACE_LINE_REGEX)
-          file, line_str, method = [$1, $2, $3]
-        elsif trace.match(JAVA_BACKTRACE_REGEX)
-          method, file, line_str = [$1, $2, $3]
-        end
-
-        # Parse the stacktrace line
-
-        # Skip stacktrace lines inside lib/bugsnag
-        next(nil) if file.nil? || file =~ %r{lib/bugsnag}
-
-        # Expand relative paths
-        p = Pathname.new(file)
-        if p.relative?
-          file = p.realpath.to_s rescue file
-        end
-
-        # Generate the stacktrace line hash
-        trace_hash = {}
-        trace_hash[:inProject] = true if @configuration.project_root && file.match(/^#{@configuration.project_root}/) && !file.match(/vendor\//)
-        trace_hash[:lineNumber] = line_str.to_i
-
-        # Clean up the file path in the stacktrace
-        if defined?(Bugsnag.configuration.project_root) && Bugsnag.configuration.project_root.to_s != ''
-          file.sub!(/#{Bugsnag.configuration.project_root}\//, "")
-        end
-
-        # Strip common gem path prefixes
-        if defined?(Gem)
-          file = Gem.path.inject(file) {|line, path| line.sub(/#{path}\//, "") }
-        end
-
-        trace_hash[:file] = file
-
-        # Add a method if we have it
-        trace_hash[:method] = method if method && (method =~ /^__bind/).nil?
-
-        if trace_hash[:file] && !trace_hash[:file].empty?
-          trace_hash
-        else
-          nil
-        end
-      end.compact
+      stacktrace = Stacktrace.new(exception, @configuration.project_root)
+      stacktrace.filter_map { |trace| trace.clean_up && trace.to_h }
     end
   end
 end
