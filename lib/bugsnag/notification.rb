@@ -17,6 +17,7 @@ module Bugsnag
     attr_accessor :context
     attr_accessor :user
     attr_accessor :configuration
+    attr_reader :exceptions
 
     class << self
       def deliver_exception_payload(endpoint, payload)
@@ -218,10 +219,6 @@ module Bugsnag
 
     def request_data
       @request_data || Bugsnag.configuration.request_data
-    end
-
-    def exceptions
-      @exceptions
     end
 
     private
