@@ -10,8 +10,6 @@ module Bugsnag
 
     API_KEY_REGEX = /[0-9a-f]{32}/i
 
-    MAX_EXCEPTIONS_TO_UNWRAP = 5
-
     SUPPORTED_SEVERITIES = ["error", "warning", "info"]
 
     CURRENT_PAYLOAD_VERSION = "2"
@@ -46,9 +44,11 @@ module Bugsnag
     end
 
     def initialize(exception, configuration, overrides = nil, request_data = nil)
+      @exceptions = ExceptionUnwrapper.unwrap(exception)
       @configuration = configuration
       @overrides = Bugsnag::Helpers.flatten_meta_data(overrides) || {}
       @request_data = request_data
+
       @meta_data = {}
       @user = {}
 
@@ -63,37 +63,6 @@ module Bugsnag
       if @overrides.key? :api_key
         self.api_key = @overrides[:api_key]
         @overrides.delete :api_key
-      end
-
-      # Unwrap exceptions
-      @exceptions = []
-      ex = exception
-      while ex != nil && !@exceptions.include?(ex) && @exceptions.length < MAX_EXCEPTIONS_TO_UNWRAP
-
-        unless ex.is_a? Exception
-          if ex.respond_to?(:to_exception)
-            ex = ex.to_exception
-          elsif ex.respond_to?(:exception)
-            ex = ex.exception
-          end
-        end
-
-        unless ex.is_a?(Exception) || (defined?(Java::JavaLang::Throwable) && ex.is_a?(Java::JavaLang::Throwable))
-          Bugsnag.warn("Converting non-Exception to RuntimeError: #{ex.inspect}")
-          ex = RuntimeError.new(ex.to_s)
-        end
-
-        @exceptions << ex
-
-        if ex.respond_to?(:cause) && ex.cause
-          ex = ex.cause
-        elsif ex.respond_to?(:continued_exception) && ex.continued_exception
-          ex = ex.continued_exception
-        elsif ex.respond_to?(:original_exception) && ex.original_exception
-          ex = ex.original_exception
-        else
-          ex = nil
-        end
       end
 
       self.class.http_proxy(configuration.proxy_host, configuration.proxy_port, configuration.proxy_user, configuration.proxy_password) if configuration.proxy_host
