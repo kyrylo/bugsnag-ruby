@@ -10,7 +10,7 @@ module Bugsnag
           task :deploy, :except => { :no_release => true }, :on_error => :continue do
             begin
               Bugsnag::Deploy.notify({
-                :api_key => fetch(:bugsnag_api_key, ENV["BUGSNAG_API_KEY"]),
+                :api_key => fetch(:bugsnag_api_key, Bugsnag::ApiKey.new(ENV["BUGSNAG_API_KEY"])),
                 :release_stage => fetch(:rails_env, ENV["BUGSNAG_RELEASE_STAGE"] || "production"),
                 :revision => fetch(:current_revision, ENV["BUGSNAG_REPOSITORY"]),
                 :repository => fetch(:repository, ENV["BUGSNAG_REVISION"]),

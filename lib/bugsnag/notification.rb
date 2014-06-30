@@ -62,7 +62,7 @@ module Bugsnag
       end
 
       if @overrides.key? :api_key
-        self.api_key = @overrides[:api_key]
+        self.api_key = ApiKey.new(@overrides[:api_key])
         @overrides.delete :api_key
       end
 
@@ -139,16 +139,7 @@ module Bugsnag
 
     # Deliver this notification to bugsnag.com Also runs through the middleware as required.
     def deliver
-      return unless @configuration.should_notify?
-
-      # Check we have at least an api_key
-      if api_key.nil?
-        Bugsnag.warn "No API key configured, couldn't notify"
-        return
-      elsif api_key !~ API_KEY_REGEX
-        Bugsnag.warn "Your API key (#{api_key}) is not valid, couldn't notify"
-        return
-      end
+      return if !@configuration.should_notify? || !api_key.valid?
 
       # Warn if no release_stage is set
       Bugsnag.warn "You should set your app's release_stage (see https://bugsnag.com/docs/notifiers/ruby#release_stage)." unless @configuration.release_stage

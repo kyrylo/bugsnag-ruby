@@ -2,6 +2,7 @@ require "rubygems"
 
 require "bugsnag/version"
 require "bugsnag/configuration"
+require "bugsnag/api_key"
 require "bugsnag/meta_data"
 require "bugsnag/stacktrace/trace"
 require "bugsnag/stacktrace"
@@ -39,7 +40,7 @@ module Bugsnag
       require "bugsnag/delay/resque" if configuration.delay_with_resque && defined?(Resque)
 
       # Log that we are ready to rock
-      if configuration.api_key && !@logged_ready
+      if configuration.api_key.valid? && !@logged_ready
         log "Bugsnag exception handler #{VERSION} ready, api_key=#{configuration.api_key}"
         @logged_ready = true
       end

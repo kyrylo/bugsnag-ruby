@@ -57,7 +57,7 @@ module Bugsnag
       self.hostname = default_hostname
 
       # Read the API key from the environment
-      self.api_key = ENV["BUGSNAG_API_KEY"]
+      self.api_key = ApiKey.new(ENV["BUGSNAG_API_KEY"])
 
       # Set up logging
       self.logger = Logger.new(STDOUT)

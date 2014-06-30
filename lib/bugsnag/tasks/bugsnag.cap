@@ -27,7 +27,7 @@ namespace :bugsnag do
     run_locally do
       begin
         Bugsnag::Deploy.notify({
-          :api_key => fetch(:bugsnag_api_key, ENV["BUGSNAG_API_KEY"]),
+          :api_key => fetch(:bugsnag_api_key, Bugsnag::ApiKey.new(ENV["BUGSNAG_API_KEY"])),
           :release_stage => fetch(:bugsnag_env) || fetch(:rails_env) || fetch(:stage) || ENV["BUGSNAG_RELEASE_STAGE"] || "production",
           :revision => fetch(:current_revision, ENV["BUGSNAG_REVISION"]),
           :repository => fetch(:repo_url, ENV["BUGSNAG_REPOSITORY"]),

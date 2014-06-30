@@ -31,14 +31,14 @@ describe Bugsnag::Notification do
 
   it "should contain an api_key if one is set" do
     expect(Bugsnag::Notification).to receive(:deliver_exception_payload) do |endpoint, payload|
-      expect(payload[:apiKey]).to eq("c9d60ae4c7e70c4b6c4ebd3e8056d2b8")
+      expect(payload[:apiKey].to_s).to eq("c9d60ae4c7e70c4b6c4ebd3e8056d2b8")
     end
 
     Bugsnag.notify(BugsnagTestException.new("It crashed"))
   end
 
   it "does not notify if api_key is not set" do
-    Bugsnag.configuration.api_key = nil
+    Bugsnag.configuration.api_key = Bugsnag::ApiKey.new(nil)
 
     expect(Bugsnag::Notification).not_to receive(:deliver_exception_payload)
 
@@ -46,7 +46,7 @@ describe Bugsnag::Notification do
   end
 
   it "does not notify if api_key is empty" do
-    Bugsnag.configuration.api_key = ""
+    Bugsnag.configuration.api_key = Bugsnag::ApiKey.new('')
 
     expect(Bugsnag::Notification).not_to receive(:deliver_exception_payload)
 
@@ -55,7 +55,7 @@ describe Bugsnag::Notification do
 
   it "lets you override the api_key" do
     expect(Bugsnag::Notification).to receive(:deliver_exception_payload) do |endpoint, payload|
-      expect(payload[:apiKey]).to eq("9d84383f9be2ca94902e45c756a9979d")
+      expect(payload[:apiKey].to_s).to eq("9d84383f9be2ca94902e45c756a9979d")
     end
 
     Bugsnag.notify(BugsnagTestException.new("It crashed"), :api_key => "9d84383f9be2ca94902e45c756a9979d")
@@ -79,7 +79,7 @@ describe Bugsnag::Notification do
     end
 
     expect(Bugsnag::Notification).to receive(:deliver_exception_payload) do |endpoint, payload|
-      expect(payload[:apiKey]).to eq("c9d60ae4c7e70c4b6c4ebd3e8056d2b9")
+      expect(payload[:apiKey].to_s).to eq("c9d60ae4c7e70c4b6c4ebd3e8056d2b9")
     end
 
     Bugsnag.notify(BugsnagTestException.new("It crashed"))
@@ -353,7 +353,7 @@ describe Bugsnag::Notification do
     Bugsnag.notify(BugsnagTestException.new("It crashed"))
   end
 
-  it "uses the http://notify.bugsnag.com endpoint by default" do
+  it "uses the http://notify.bugsnag.com endpoint by default", yo: true do
     expect(Bugsnag::Notification).to receive(:deliver_exception_payload) do |endpoint, payload|
       expect(endpoint).to eq("http://notify.bugsnag.com")
     end

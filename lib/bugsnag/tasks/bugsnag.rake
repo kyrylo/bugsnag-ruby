@@ -3,14 +3,14 @@ require "bugsnag"
 namespace :bugsnag do
   desc "Notify Bugsnag of a new deploy."
   task :deploy do
-    api_key = ENV["BUGSNAG_API_KEY"]
+    api_key = Bugsnag::ApiKey.new(ENV["BUGSNAG_API_KEY"])
     release_stage = ENV["BUGSNAG_RELEASE_STAGE"]
     app_version = ENV["BUGSNAG_APP_VERSION"]
     revision = ENV["BUGSNAG_REVISION"]
     repository = ENV["BUGSNAG_REPOSITORY"]
     branch = ENV["BUGSNAG_BRANCH"]
 
-    Rake::Task["load"].invoke unless api_key
+    Rake::Task["load"].invoke unless api_key.valid?
 
     Bugsnag::Deploy.notify({
       :api_key => api_key,

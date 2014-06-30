@@ -17,7 +17,7 @@ module Bugsnag
       endpoint = (opts[:use_ssl] ? "https://" : "http://") + opts[:endpoint] + "/deploy"
 
       parameters = {
-        "apiKey" => opts[:api_key],
+        "apiKey" => opts[:api_key].to_s,
         "releaseStage" => opts[:release_stage],
         "appVersion" => opts[:app_version],
         "revision" => opts[:revision],

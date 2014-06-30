@@ -15,17 +15,17 @@ end
 
 RSpec.configure do |config|
   config.order = "random"
-  
+
   config.before(:each) do
     Bugsnag.instance_variable_set(:@configuration, Bugsnag::Configuration.new)
     Bugsnag.configure do |config|
-      config.api_key = "c9d60ae4c7e70c4b6c4ebd3e8056d2b8"
+      config.api_key = Bugsnag::ApiKey.new('c9d60ae4c7e70c4b6c4ebd3e8056d2b8')
       config.release_stage = "production"
       # silence logger in tests
       config.logger = Logger.new(StringIO.new)
     end
   end
-  
+
   config.after(:each) do
     Bugsnag.configuration.clear_request_data
   end
