@@ -266,26 +266,5 @@ module Bugsnag
         meta_data[:custom][key] = value
       end
     end
-
-    def exception_list
-      @exceptions.map do |exception|
-        {
-          :errorClass => error_class(exception),
-          :message => exception.message,
-          :stacktrace => stacktrace(exception)
-        }
-      end
-    end
-
-    def error_class(exception)
-      # The "Class" check is for some strange exceptions like Timeout::Error
-      # which throw the error class instead of an instance
-      (exception.is_a? Class) ? exception.name : exception.class.name
-    end
-
-    def stacktrace(exception)
-      stacktrace = Stacktrace.new(exception, @configuration.project_root)
-      stacktrace.filter_map { |trace| trace.clean_up && trace.to_h }
-    end
   end
 end
