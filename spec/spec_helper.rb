@@ -1,4 +1,5 @@
 require 'bugsnag'
+require 'securerandom'
 
 class BugsnagTestException < RuntimeError; end
 
@@ -15,6 +16,8 @@ end
 
 RSpec.configure do |config|
   config.order = "random"
+
+  config.filter_run_excluding :exclude_ancient_ruby => RUBY_VERSION < '1.9'
 
   config.before(:each) do
     Bugsnag.instance_variable_set(:@configuration, Bugsnag::Configuration.new)

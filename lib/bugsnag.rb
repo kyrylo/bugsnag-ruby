@@ -1,12 +1,25 @@
 require "rubygems"
+require 'set'
+require 'forwardable'
 
 require "bugsnag/version"
 require "bugsnag/configuration"
 require "bugsnag/api_key"
 require "bugsnag/meta_data"
+require "bugsnag/meta_data_hash"
+require "bugsnag/meta_data_hash/cleaner"
+require 'bugsnag/meta_data_hash/cleaner/default_cleaner'
+require 'bugsnag/meta_data_hash/cleaner/array_cleaner'
+require 'bugsnag/meta_data_hash/cleaner/hash_cleaner'
+require 'bugsnag/meta_data_hash/cleaner/numeric_cleaner'
+require 'bugsnag/meta_data_hash/cleaner/set_cleaner'
+require 'bugsnag/meta_data_hash/cleaner/string_cleaner'
 require "bugsnag/stacktrace/trace"
 require "bugsnag/stacktrace"
 require "bugsnag/exception_unwrapper"
+require "bugsnag/exception_list"
+require "bugsnag/payload"
+require "bugsnag/payload/event"
 require "bugsnag/notification/deliveryman"
 require "bugsnag/notification"
 require "bugsnag/helpers"

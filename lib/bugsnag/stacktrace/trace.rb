@@ -9,9 +9,10 @@ module Bugsnag
       # e.g. "org.jruby.Ruby.runScript(Ruby.java:807)"
       JAVA_BACKTRACE_REGEX = /^(.*)\((.*)(?::([0-9]+))?\)$/
 
-      def initialize(trace, project_root)
+      attr_writer :project_root
+
+      def initialize(trace)
         @trace = trace
-        @project_root = project_root
         @trace_hash = {}
 
         if trace.match(BACKTRACE_LINE_REGEX)
