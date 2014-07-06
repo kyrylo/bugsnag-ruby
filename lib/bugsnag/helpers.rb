@@ -9,59 +9,6 @@ end
 module Bugsnag
   module Helpers
     MAX_STRING_LENGTH = 4096
-
-    def self.cleanup_obj(obj, filters = nil, seen=Set.new)
-      return nil unless obj
-
-      # Protect against recursion of recursable items
-      if obj.is_a?(Hash) || obj.is_a?(Array) || obj.is_a?(Set)
-        return "[RECURSION]" if seen.include? obj
-
-        # We duplicate the seen set here so that no updates by further cleanup_obj calls
-        # are persisted beyond that call.
-        seen = seen.dup
-        seen << obj
-      end
-
-      case obj
-      when Hash
-        clean_hash = {}
-        obj.each do |k,v|
-          if filters && filters.any? {|f| k.to_s.include?(f.to_s)}
-            clean_hash[k] = "[FILTERED]"
-          else
-            clean_obj = cleanup_obj(v, filters, seen)
-            clean_hash[k] = clean_obj
-          end
-        end
-        clean_hash
-      when Array, Set
-        obj.map { |el| cleanup_obj(el, filters, seen) }.compact
-      when Numeric
-        obj
-      when String
-        if defined?(obj.encoding) && defined?(Encoding::UTF_8)
-          if obj.encoding == Encoding::UTF_8
-            obj.valid_encoding? ? obj : obj.encode('utf-16', {:invalid => :replace, :undef => :replace}).encode('utf-8')
-          else
-            obj.encode('utf-8', {:invalid => :replace, :undef => :replace})
-          end
-        elsif defined?(Iconv)
-          Iconv.conv('UTF-8//IGNORE', 'UTF-8', obj) || obj
-        else
-          obj
-        end
-      else
-        str = obj.to_s
-        # avoid leaking potentially sensitive data from objects' #inspect output
-        if str =~ /#<.*>/
-          '[OBJECT]'
-        else
-          str
-        end
-      end
-    end
-
     def self.cleanup_url(url, filters = nil)
       return url unless filters
 
