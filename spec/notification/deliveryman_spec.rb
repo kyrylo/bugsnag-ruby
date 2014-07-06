@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 require 'spec_helper'
-require 'securerandom'
 
 describe Bugsnag::Notification::Deliveryman do
   def notify_test_exception(*args)

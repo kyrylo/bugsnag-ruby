@@ -1,4 +1,5 @@
 require 'bugsnag'
+require 'securerandom'
 
 class BugsnagTestException < RuntimeError; end
 
