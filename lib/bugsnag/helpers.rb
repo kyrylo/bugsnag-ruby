@@ -1,11 +1,3 @@
-module HTTParty
-  class Parser
-    def json
-      Bugsnag::Helpers.load_json(body)
-    end
-  end
-end
-
 module Bugsnag
   module Helpers
     MAX_STRING_LENGTH = 4096
@@ -42,23 +34,6 @@ module Bugsnag
         overrides.merge(meta_data)
       else
         overrides
-      end
-    end
-
-    # Helper functions to work around MultiJson changes in 1.3+
-    def self.dump_json(object, options={})
-      if MultiJson.respond_to?(:adapter)
-        MultiJson.dump(object, options)
-      else
-        MultiJson.encode(object, options)
-      end
-    end
-
-    def self.load_json(json, options={})
-      if MultiJson.respond_to?(:adapter)
-        MultiJson.load(json, options)
-      else
-        MultiJson.decode(json, options)
       end
     end
   end
