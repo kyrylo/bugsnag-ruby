@@ -10,7 +10,7 @@ module Bugsnag
       end
     end
 
-    def self.load_json(json, options = {})
+    def self.load(json, options = {})
       if modern_multi_json?
         MultiJson.load(json, options)
       else
