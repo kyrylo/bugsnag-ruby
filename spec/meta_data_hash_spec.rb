@@ -34,7 +34,7 @@ describe Bugsnag::MetaDataHash do
 
   describe "#new" do
     context "without meaningful arguments" do
-      subject { described_class.new([]).meta_data }
+      subject { described_class.new([]).to_h }
 
       it "sets @meta_data to an empty hash" do
         expect(subject).to eq({})
@@ -42,17 +42,16 @@ describe Bugsnag::MetaDataHash do
     end
 
     context "with exceptions without meta data" do
-      subject { described_class.new([Exception.new]).meta_data }
+      subject { described_class.new([Exception.new]).to_h }
 
       it "doesn't populate @meta_data" do
         expect(subject).to eq({})
       end
     end
 
-
     context "with exceptions with meta data" do
       context "overrides present" do
-        subject { described_class.new([meta_exception]).meta_data }
+        subject { described_class.new([meta_exception]).to_h }
 
         it "populates @meta_data with meta data" do
           expect(subject).to eq(meta_data)
@@ -69,7 +68,7 @@ describe Bugsnag::MetaDataHash do
           }
         }
 
-        subject { described_class.new([meta_exception], overrides).meta_data }
+        subject { described_class.new([meta_exception], overrides).to_h }
 
         it "overrides meta data from exceptions if overrides are present" do
           expect(subject).to eq(overrides)
@@ -86,8 +85,7 @@ describe Bugsnag::MetaDataHash do
         }
 
         subject {
-          described_class
-            .new([sensitive_exception], {}, filtered_fields).meta_data
+          described_class.new([sensitive_exception], {}, filtered_fields).to_h
         }
 
         it "filters sensitive meta data" do
@@ -99,7 +97,7 @@ describe Bugsnag::MetaDataHash do
   end
 
   describe "#add" do
-    subject { meta_data_hash.meta_data }
+    subject { meta_data_hash.to_h }
 
     context "value is a hash" do
       context "key exists" do
@@ -136,7 +134,7 @@ describe Bugsnag::MetaDataHash do
     let(:meta_data_hash) { described_class.new([meta_exception]) }
 
     context "short meta data" do
-      subject { meta_data_hash.truncate && meta_data_hash.meta_data }
+      subject { meta_data_hash.truncate && meta_data_hash.to_h }
 
       it "is not getting truncated" do
         expect(subject).to eq(meta_data)
@@ -157,22 +155,22 @@ describe Bugsnag::MetaDataHash do
         expect {
           meta_data_hash.truncate
         }.to change {
-          tab = meta_data_hash.meta_data[:some_tab]
+          tab = meta_data_hash.to_h[:some_tab]
           [tab[:giant].size, tab[:mega].size]
         }.from([10_000, 5_000]).to([4107, 4107])
       end
 
       it "appends the truncated mark to the end" do
-        expect(meta_data_hash.meta_data[:some_tab][:giant])
+        expect(meta_data_hash.to_h[:some_tab][:giant])
           .not_to match(/\[TRUNCATED\]/)
-        expect(meta_data_hash.meta_data[:some_tab][:mega])
+        expect(meta_data_hash.to_h[:some_tab][:mega])
           .not_to match(/\[TRUNCATED\]/)
 
         meta_data_hash.truncate
 
-        expect(meta_data_hash.meta_data[:some_tab][:giant])
+        expect(meta_data_hash.to_h[:some_tab][:giant])
           .to match(/\[TRUNCATED\]/)
-        expect(meta_data_hash.meta_data[:some_tab][:mega])
+        expect(meta_data_hash.to_h[:some_tab][:mega])
           .to match(/\[TRUNCATED\]/)
       end
     end

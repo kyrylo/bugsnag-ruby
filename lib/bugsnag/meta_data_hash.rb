@@ -41,9 +41,6 @@ module Bugsnag
     # The tab on bugsnag.com, which receives meta data by default.
     DEFAULT_TAB = :custom
 
-    # @return [Hash]
-    attr_reader :meta_data
-
     def initialize(exceptions, overrides = {}, filters = Set.new)
       @meta_data = Cleaner.new(generate(exceptions, overrides), filters).clean
     end
@@ -54,6 +51,10 @@ module Bugsnag
 
     def truncate
       @meta_data = reduce_hash_size(@meta_data)
+    end
+
+    def to_h
+      @meta_data
     end
 
     private
