@@ -9,9 +9,10 @@ module Bugsnag
       # e.g. "org.jruby.Ruby.runScript(Ruby.java:807)"
       JAVA_BACKTRACE_REGEX = /^(.*)\((.*)(?::([0-9]+))?\)$/
 
-      def initialize(trace, project_root)
+      attr_writer :project_root
+
+      def initialize(trace)
         @trace = trace
-        @project_root = project_root
         @trace_hash = {}
 
         if trace.match(BACKTRACE_LINE_REGEX)
@@ -38,7 +39,7 @@ module Bugsnag
           :method => (@method_signature if includes_method_signature?),
           :lineNumber => @line_str.to_i,
           :file => @file
-        }
+        }.reject { |k, v| v.nil? }
         @trace_hash.merge!(attrs)
       end
 
@@ -57,7 +58,9 @@ module Bugsnag
       # @return [void]
       def strip_gem_path_prefixes
         if defined?(Gem)
-          Gem.path.inject(@file) { |line, path| line.sub %r|#{path}/|, '' }
+          @file = Gem.path.inject(@file) do |line, path|
+            line.sub(%r|#{path}/|, '')
+          end
         end
       end
 

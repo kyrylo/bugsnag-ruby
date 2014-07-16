@@ -1,22 +1,30 @@
 module Bugsnag
   class Stacktrace
-    def initialize(exception, project_root)
-      @exception_traces = tracify(exception.backtrace || caller, project_root)
+
+    attr_reader :project_root
+
+    def initialize(exception)
+      @exception_traces = tracify(exception)
+    end
+
+    def project_root=(project_root)
+      @exception_traces.each do |et|
+        et.project_root = project_root
+      end
+      @project_root = project_root
     end
 
     def filter_map
-      traces = @exception_traces.map do |trace|
+      @exception_traces.map { |trace|
         next if trace.skippable?
         yield trace
-      end
-
-      traces.compact
+      }.compact
     end
 
     private
 
-    def tracify(backtrace, project_root)
-      backtrace.map { |bt| Trace.new(bt, project_root) }
+    def tracify(exception)
+      (exception.backtrace || caller).map { |bt| Trace.new(bt) }
     end
   end
 end

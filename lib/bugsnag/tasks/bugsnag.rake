@@ -13,7 +13,7 @@ namespace :bugsnag do
     Rake::Task["load"].invoke unless api_key.valid?
 
     Bugsnag::Deploy.notify({
-      :api_key => api_key,
+      :api_key => api_key.to_s,
       :release_stage => release_stage,
       :app_version => app_version,
       :revision => revision,
